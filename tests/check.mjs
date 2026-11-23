@@ -29,11 +29,17 @@ const adjust = v => page.evaluate(v => { const p = document.getElementById('pick
 // Logged out
 await page.goto('http://localhost:8765/');
 ok(await page.isVisible('#login'), 'logged out shows the login button');
+await page.route('https://freesound.org/apiv2/oauth2/authorize/**', r => r.fulfill({ body: 'stub' }));
 await page.click('#login');
-ok((await said()).includes('isn\'t set up yet'), 'login without an app ID says so');
+await page.waitForURL(/oauth2\/authorize/);
+ok(page.url().includes('client_id=x9ZQRPCSCOoopP3UBoWu') && page.url().includes('state='), 'login goes to Freesound with the app ID and a state');
 await page.goto('http://localhost:8765/?code=abc&state=wrong');
 ok((await said()).includes("didn't start on this page"), 'a login with the wrong state is refused');
 ok(!page.url().includes('code='), 'the code is cleared from the address');
+await page.goto('http://localhost:8765/?error=access_denied');
+ok((await page.textContent('#loginStatus')).includes('Authorize!'), 'a denied login explains the button order, on the page');
+await page.goto('http://localhost:8765/?error=invalid_scope&error_description=Bad+scope');
+ok((await page.textContent('#loginStatus')).includes('invalid_scope, Bad scope'), "another login error shows Freesound's exact words");
 
 // Logged in
 await page.evaluate(t => localStorage.setItem('ff.login', JSON.stringify({ access: t, refresh: 'never-used', expires: Date.now() + 864e5 })), token);

@@ -131,7 +131,7 @@ function failure(status) {
 
 function startLogin() {
   if (!CFG.clientId || CFG.clientId === 'SET_ME') {
-    say("This page isn't set up yet: it still needs its Freesound app ID.");
+    loginProblem("This page isn't set up yet: it still needs its Freesound app ID.");
     return;
   }
   const state = crypto.getRandomValues(new Uint32Array(4)).join('-');
@@ -146,12 +146,26 @@ async function finishLogin() {
   history.replaceState(null, '', location.pathname); // a code works once; don't leave it in the address
   const expected = localStorage.getItem('ff.state');
   localStorage.removeItem('ff.state');
-  if (p.has('error')) { say('The Freesound login was cancelled.'); return; }
-  if (!expected || p.get('state') !== expected) { say("That login didn't start on this page. Try logging in again."); return; }
+  if (p.has('error')) {
+    const code = p.get('error');
+    loginProblem(code === 'access_denied'
+      ? "Login not finished: Freesound says access was denied. That is what the first button, Deny access, does. Try again, and on Freesound's page choose the second button, Authorize!"
+      : `Login not finished. Freesound said: ${code}${p.get('error_description') ? ', ' + p.get('error_description') : ''}. Tell Blake these exact words.`);
+    return;
+  }
+  if (!expected || p.get('state') !== expected) { loginProblem("Login not finished: that login didn't start on this page. Try logging in again."); return; }
   try {
     saveLogin(await worker('/token', { code: p.get('code') }));
     return true;
-  } catch (e) { say(e.message); }
+  } catch (e) { loginProblem('Login not finished. ' + e.message); }
+}
+// Kept on the page as well as spoken, so it can be read on the braille
+// display at his own pace after the page loads.
+function loginProblem(text) {
+  const el = $('loginStatus');
+  el.textContent = text;
+  el.hidden = false;
+  say(text);
 }
 
 function showScreen() {
