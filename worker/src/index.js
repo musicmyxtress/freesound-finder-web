@@ -31,6 +31,9 @@ export default {
         if (typeof body.code !== 'string' || !body.code) return reply({ error: 'No login code.' }, 400);
         form.set('grant_type', 'authorization_code');
         form.set('code', body.code);
+        // PKCE: Freesound requires it for new apps. The verifier was made on
+        // the phone; Freesound checks it against the fingerprint it was sent.
+        if (typeof body.code_verifier === 'string' && body.code_verifier) form.set('code_verifier', body.code_verifier);
       } else {
         if (typeof body.refresh_token !== 'string' || !body.refresh_token) return reply({ error: 'Log in again.', expired: true }, 401);
         form.set('grant_type', 'refresh_token');

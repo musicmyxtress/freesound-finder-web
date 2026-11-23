@@ -33,6 +33,15 @@ await page.route('https://freesound.org/apiv2/oauth2/authorize/**', r => r.fulfi
 await page.click('#login');
 await page.waitForURL(/oauth2\/authorize/);
 ok(page.url().includes('client_id=x9ZQRPCSCOoopP3UBoWu') && page.url().includes('state='), 'login goes to Freesound with the app ID and a state');
+{
+  const u = new URL(page.url());
+  await page.goto('http://localhost:8765/robots.txt'); // back on the page's own site to read its storage
+  const verifier = await page.evaluate(() => localStorage.getItem('ff.verifier'));
+  const { createHash } = await import('crypto');
+  const expect = createHash('sha256').update(verifier).digest('base64url');
+  ok(u.searchParams.get('code_challenge_method') === 'S256' && u.searchParams.get('code_challenge') === expect && verifier.length >= 43,
+    'login sends a PKCE challenge that matches the saved verifier');
+}
 await page.goto('http://localhost:8765/?code=abc&state=wrong');
 ok((await said()).includes("didn't start on this page"), 'a login with the wrong state is refused');
 ok(!page.url().includes('code='), 'the code is cleared from the address');

@@ -129,15 +129,24 @@ function failure(status) {
   return new FinderError(`Freesound answered with error ${status}.`);
 }
 
-function startLogin() {
+async function startLogin() {
   if (!CFG.clientId || CFG.clientId === 'SET_ME') {
     loginProblem("This page isn't set up yet: it still needs its Freesound app ID.");
     return;
   }
   const state = crypto.getRandomValues(new Uint32Array(4)).join('-');
+  // PKCE, which Freesound requires for new apps: a random verifier stays on
+  // this phone, Freesound gets only its SHA-256 fingerprint now, and the
+  // verifier itself goes with the code afterwards. A stolen code is useless
+  // without it.
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const challenge = b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
   localStorage.setItem('ff.state', state);
-  location.href = `${API}oauth2/authorize/?client_id=${encodeURIComponent(CFG.clientId)}&response_type=code&state=${state}`;
+  localStorage.setItem('ff.verifier', verifier);
+  location.href = `${API}oauth2/authorize/?client_id=${encodeURIComponent(CFG.clientId)}&response_type=code&state=${state}`
+    + `&code_challenge=${challenge}&code_challenge_method=S256`;
 }
+const b64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 // Freesound sends him back here with ?code=...&state=... after he logs in.
 async function finishLogin() {
@@ -145,7 +154,9 @@ async function finishLogin() {
   if (!p.has('code') && !p.has('error')) return;
   history.replaceState(null, '', location.pathname); // a code works once; don't leave it in the address
   const expected = localStorage.getItem('ff.state');
+  const verifier = localStorage.getItem('ff.verifier');
   localStorage.removeItem('ff.state');
+  localStorage.removeItem('ff.verifier');
   if (p.has('error')) {
     const code = p.get('error');
     loginProblem(code === 'access_denied'
@@ -155,7 +166,7 @@ async function finishLogin() {
   }
   if (!expected || p.get('state') !== expected) { loginProblem("Login not finished: that login didn't start on this page. Try logging in again."); return; }
   try {
-    saveLogin(await worker('/token', { code: p.get('code') }));
+    saveLogin(await worker('/token', { code: p.get('code'), code_verifier: verifier }));
     return true;
   } catch (e) { loginProblem('Login not finished. ' + e.message); }
 }
