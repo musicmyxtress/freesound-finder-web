@@ -1,0 +1,12 @@
+{
+  "name": "freesound-finder-web",
+  "private": true,
+  "description": "Freesound Finder for the web. The site needs no build; this file only runs the checks.",
+  "type": "module",
+  "scripts": {
+    "check": "node tests/check.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.1"
+  }
+}

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Freesound Finder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Freesound Finder</h1>
+
+  <section id="loggedOut" hidden>
+    <p>Log in with your own Freesound account. You only need to do this once on this phone.</p>
+    <button id="login" type="button">Log in to Freesound</button>
+  </section>
+
+  <section id="app" hidden>
+    <form id="searchForm" role="search">
+      <label for="query">Search</label>
+      <input id="query" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off">
+      <button type="submit">Search</button>
+    </form>
+    <button id="latest" type="button">Latest sounds</button>
+    <label>License
+      <select id="license">
+        <option value="">Any license</option>
+        <option value="Creative Commons 0">CC0 only, no credit needed</option>
+        <option value="Attribution">Attribution</option>
+        <option value="Attribution NonCommercial">Attribution Noncommercial</option>
+      </select>
+    </label>
+    <label>Sort
+      <select id="sort">
+        <option value="score">Best match</option>
+        <option value="created_desc">Newest first</option>
+        <option value="downloads_desc">Most downloaded</option>
+        <option value="rating_desc">Highest rated</option>
+        <option value="duration_asc">Shortest first</option>
+        <option value="duration_desc">Longest first</option>
+      </select>
+    </label>
+
+    <h2>Sounds</h2>
+    <label class="picker">Sound picker
+      <input id="picker" type="range" min="0" max="2" step="1" value="1" aria-valuetext="No sounds yet. Search first.">
+    </label>
+    <div class="row">
+      <button id="prev" type="button">Previous</button>
+      <button id="next" type="button">Next</button>
+    </div>
+    <div class="row">
+      <button id="play" type="button">Play again</button>
+      <button id="stop" type="button">Stop</button>
+    </div>
+    <button id="download" type="button">Download</button>
+
+    <h2>Details</h2>
+    <div id="details"><p>No sound chosen.</p></div>
+    <div id="tags"></div>
+
+    <h2>Downloads</h2>
+    <p id="downloads">No downloads yet.</p>
+    <button id="copyCredits" type="button">Copy credits</button>
+    <button id="logout" type="button">Log out</button>
+  </section>
+
+  <div id="live" class="sr" aria-live="polite"></div>
+</main>
+<audio id="player" playsinline preload="auto"></audio>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

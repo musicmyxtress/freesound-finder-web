@@ -1,0 +1,7 @@
+name = "freesound-finder"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# CLIENT_ID and CLIENT_SECRET are Worker secrets (wrangler secret put ...),
+# never in the repo. They belong to the "Freesound Finder web" API credential
+# under Blake's Freesound account, whose callback URL is the GitHub Pages page.
