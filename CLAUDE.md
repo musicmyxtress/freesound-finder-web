@@ -35,7 +35,7 @@ https://musicmyxtress.github.io/freesound-finder-web/.
   on it, which lets it change previews later without a tap (iOS rule). 250 ms
   wait before a preview starts, so flicking quickly doesn't load every one.
   Leaving Safari pauses it.
-- Login: OAuth code flow with a random `state` in localStorage. Tokens live in
+- Login: OAuth code flow with a random `state` and **PKCE (S256)** in localStorage. Freesound requires PKCE for credentials made since it was added (2026; Blake's older Tonic credential doesn't need it). The verifier goes to the Worker's `/token` with the code. Freesound's allow page lists **Deny access before Authorize!** and Enter submits Deny, so the logged-out screen warns about that. Tokens live in
   localStorage on his phone. Refresh tokens rotate, so all renewals share one
   promise. A failed renewal logs him out with a sentence saying so.
 - Words match the desktop app (`Words` in FreesoundApi.cs): same line,
